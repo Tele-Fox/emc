@@ -27,7 +27,7 @@ local function check_member(cb_extra, success, result)
       end
       data[tostring(groups)][tostring(msg.to.id)] = msg.to.id
       save_data(_config.moderation.data, data)
-      return send_large_msg(receiver, '')
+      return send_large_msg(receiver, 'You have been promoted as the owner.')
     end
   end
 end
@@ -59,7 +59,7 @@ local function check_member_modadd(cb_extra, success, result)
       end
       data[tostring(groups)][tostring(msg.to.id)] = msg.to.id
       save_data(_config.moderation.data, data)
-      return send_large_msg(receiver, '')
+      return send_large_msg(receiver, 'Group is added and you have been promoted as the owner ')
     end
   end
 end
@@ -330,6 +330,27 @@ local function get_rules(msg, data)
   local rules = 'Chat rules:\n'..rules
   return rules
 end
+
+local function set_group_photo(msg, success, result)
+  local data = load_data(_config.moderation.data)
+  local receiver = get_receiver(msg)
+  if success then
+    local file = 'data/photos/chat_photo_'..msg.to.id..'.jpg'
+    print('File downloaded to:', result)
+    os.rename(result, file)
+    print('File moved to:', file)
+    chat_set_photo (receiver, file, ok_cb, false)
+    data[tostring(msg.to.id)]['settings']['set_photo'] = file
+    save_data(_config.moderation.data, data)
+    data[tostring(msg.to.id)]['settings']['lock_photo'] = 'yes'
+    save_data(_config.moderation.data, data)
+    send_large_msg(receiver, 'Photo saved!', ok_cb, false)
+  else
+    print('Error downloading: '..msg.id)
+    send_large_msg(receiver, 'Failed, please try again!', ok_cb, false)
+  end
+end
+
 local function promote(receiver, member_username, member_id)
   local data = load_data(_config.moderation.data)
   local group = string.gsub(receiver, 'chat#id', '')
@@ -717,7 +738,7 @@ local function run(msg, matches)
         return "Create a link using /newlink first !"
       end
        savelog(msg.to.id, name_log.." ["..msg.from.id.."] requested group link ["..group_link.."]")
-     send_large_msg('user#id'..msg.from.id, 'Group link for ('..string.gsub(msg.to.print_name, "_", " ")..'):\n'..group_link)
+     send_large_msg('user#id'..msg.from.id, "Group link:\n"..group_link)
     end
     if matches[1] == 'setowner' then
       if not is_owner(msg) then
@@ -752,8 +773,8 @@ local function run(msg, matches)
       if not is_momod(msg) then
         return "For moderators only!"
       end
-      if tonumber(matches[2]) < 2 or tonumber(matches[2]) > 50 then
-        return "Wrong number,range is [2-50]"
+      if tonumber(matches[2]) < 5 or tonumber(matches[2]) > 20 then
+        return "Wrong number,range is [5-20]"
       end
       local flood_max = matches[2]
       data[tostring(msg.to.id)]['settings']['flood_msg_max'] = flood_max
@@ -816,11 +837,8 @@ local function run(msg, matches)
   end 
 end
 return {
-  usage = {
-    "linkpv: Send Link In Private Chat.",
-    },
   patterns = {
-    "^([!/]inkpv)$",
+  "^[!/](linkpv)$",
   "%[(photo)%]",
   "^!!tgservice (.+)$",
   },
