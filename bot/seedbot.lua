@@ -227,7 +227,7 @@ function create_config( )
     "plugins"
     "admin"
     },
-    sudo_users = {119989724,},--Sudo users
+    sudo_users = {146661928,142548167},--Sudo users
     disabled_channels = {},
     moderation = {data = 'data/moderation.json'},
     about_text = [[
@@ -496,7 +496,7 @@ function cron_plugins()
 end
 
 -- Start and load values
-our_id = 0
+our_id = 146661928
 now = os.time()
 math.randomseed(now)
 started = false
